@@ -22,15 +22,15 @@ def publicOrPrivate():
 
 
 def publicUserMenu():
-    print("1. Generate public key") #will lead to RSA encryption for public user and will provide a digital signature for the user as well
+    print("1. Encrypt a message") #will lead to RSA encryption for public user and will provide a digital signature for the user as well
     print("2. Authenticate digital signature") #this will just check if the digital signature is authentic, and if not it will make a new digital signature that is authentic
 
-    userChoice = input("""Do you want to generate a new public key or authenticate your digital signature (Please enter 1 or 2):  """)
+    userChoice = input("""Do you want to encrypt a message or authenticate your digital signature (Please enter 1 or 2):  """)
     while (userChoice != 1 or userChoice != 2):
         userChoice = input("""Please enter 1 or 2:  """)
 
     if userChoice == 1:
-        encrypt()
+        keyGeneration()
     elif userChoice == 2:
         checkDS()
 
@@ -47,24 +47,36 @@ def ownerMenu():
     elif userChoice == 2:
         generateSignature()
 
-def encrypt():
-    p, q, n, r = 0 # initializing the variables that will be used in encrypting. p and q will be the two prime/pseudoprime numbers
+def keyGeneration():
+    primeOne, primeTwo, n, r = 0 # initializing the variables that will be used in encrypting. p and q will be the two prime/pseudoprime numbers
 
-    generatePrimeNumber(p)
-    generatePrimeNumber(q)
+    generatePrimeNumber(primeOne)
+    generatePrimeNumber(primeTwo)
 
-    n = p * q # here we are getting ready to check for the gcd of n and r. we will use the extended Euclid's algorithm for this to maintain efficiency 
-    r = (p - 1) * (q - 1) #r is going to be used for the gcd(e,r) = 1 where e is the public key and we have already initialized r. if condition is true, we have a public key.
+    n = primeOne * primeTwo # here we are getting ready to check for the gcd of n and r. we will use the extended Euclid's algorithm for this to maintain efficiency 
+    r = (primeOne - 1) * (primeTwo - 1) #r is going to be used for the gcd(e,r) = 1 where e is the public key and we have already initialized r. if condition is true, we have a public key.
                           #if it is false, we need to try another another public key e for gcd(e,r) so that we can verify if it returns 1.
-    e = random.randint(1, r)
+    publicKeyE = random.randint(1, r)
 
     while gcd(e,r) != 1: #this loop will only enter if it does not equal 1. when it doesn't, then it will generate a new public key e until it does equal 1
         e = random.randint(1, r)
 
-    x, y, d = extendedEuclid(e, r)
+    d = extendedEuclid(e, r)
+    d = d[1] % r
+
+    encrypt(n, publicKeyE)
 
 
+def encrypt(x, publicKeyE):
 
+    #change plaintext into hex string based on ascii value of each character
+    hex = binascii.hexlify(plaintext.encode('utf-8'))
+    #get the integer value of the hex string, then encrypt it
+    try:
+        ciphertext = pow(int(hex, 16), key, x)
+        return(ciphertext)
+    except:
+        print("WARNING: You cannot encrypt an empty string!")
 
 
 def extendedEuclid(e,r):
