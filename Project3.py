@@ -1,51 +1,40 @@
 #Project 3: Diante Woodson, Christopher Stinson, Daniel Ashcraft
-import sys
 import random
+import binascii
 
 def main():
-    publicOrPrivate()
+    n, userPublicKey, userPrivateKey = keyGeneration()
+    menu(n, userPublicKey, userPrivateKey)
 
-def publicOrPrivate():
-    print("1. Owner") #provide option for owner
+def menu(n, publicKey, privateKey):
+    print("Your private key: ", privateKey)
+    print("Your public key: ", publicKey)
+    print("Hello user, this is an RSA encryption program. Make sure to keep your private key safe and secure!")
+    print("Here are your options:")
     print()
-    print("2. Public User")#provide option for public user
-    
-    userChoice = input("""Are you a private or a public user (Please enter 1 or 2):  """) #take user input and check if they are an owner or public user
-    while (userChoice != 1 or userChoice != 2): #this loop will handle the error checking if user input does not equal exactly 1 or 2
-        userChoice = input("""Please enter 1 or 2:  """)
+    print("1. Encrypt a personal message")
+    print("2. Decrypt a personal message")
+    print("3. Verify your personal signature")
+    print("4. Sign your personal message")
+    print("5. Exit the program")
+    userChoice = input("What would you like to do (Please enter 1-5): ")
 
+    if userChoice == "1":
+        userInput = input("Please enter you message: ")
+        encryptedUserInput = encrypt(n, publicKey, userInput)
+        if encryptedUserInput is not None:
+            print("Encrypted message: ", encryptedUserInput)
+    elif userChoice == "2":
+        userInput = input("Please enter the encrypted message you would like to decrypted: ")
+        try:
+            decryptedUserInput = decrypted(privateKey, n, userInput)
+        except:
+            print("Warning: Cannot decrypt an empty message")
+            continue 
 
-    if userChoice == 1:
-        publicUserMenu()
-    elif userChoice == 2:
-        ownerMenu()
-
-
-def publicUserMenu():
-    print("1. Encrypt a message") #will lead to RSA encryption for public user and will provide a digital signature for the user as well
-    print("2. Authenticate digital signature") #this will just check if the digital signature is authentic, and if not it will make a new digital signature that is authentic
-
-    userChoice = input("""Do you want to encrypt a message or authenticate your digital signature (Please enter 1 or 2):  """)
-    while (userChoice != 1 or userChoice != 2):
-        userChoice = input("""Please enter 1 or 2:  """)
-
-    if userChoice == 1:
-        keyGeneration()
-    elif userChoice == 2:
-        checkDS()
-
-def ownerMenu():
-    print("1. Decipher text") #will decipher text that public users have that are encrypted
-    print("2. Generate digital signature") #this will create a digital signature that can then be check by public users for if it is authentic or not
-
-    userChoice = input("""Do you want to decipher text or generate a new digital signature (Please enter 1 or 2):  """)
-    while (userChoice != 1 or userChoice != 2):
-        userChoice = input("""Please enter 1 or 2:  """)
-
-    if userChoice == 1:
-        decrypt()
-    elif userChoice == 2:
-        generateSignature()
+        if decryptedUserInput is not None:
+            print("Decrypted message: ", decryptedUserInput)
+    elif userChoice = "3":
 
 def keyGeneration():
     primeOne, primeTwo, n, r = 0 # initializing the variables that will be used in encrypting. p and q will be the two prime/pseudoprime numbers
@@ -61,22 +50,22 @@ def keyGeneration():
     while gcd(e,r) != 1: #this loop will only enter if it does not equal 1. when it doesn't, then it will generate a new public key e until it does equal 1
         e = random.randint(1, r)
 
-    d = extendedEuclid(e, r)
-    d = d[1] % r
+    privateKey = extendedEuclid(e, r)
+    privateKey = privateKey[1] % r
 
-    encrypt(n, publicKeyE)
+    return (n, publicKeyE, privateKey)
 
 
-def encrypt(x, publicKeyE):
+def encrypt(x, publicKeyE, userText):
 
     #change plaintext into hex string based on ascii value of each character
-    hex = binascii.hexlify(plaintext.encode('utf-8'))
+    hex = binascii.hexlify(userText.encode('utf-8'))
     #get the integer value of the hex string, then encrypt it
     try:
-        ciphertext = pow(int(hex, 16), key, x)
+        encryptedText = pow(int(hex, 16), key, x)
         return(ciphertext)
     except:
-        print("WARNING: You cannot encrypt an empty string!")
+        print("Warning: Your input is empty!")
 
 
 def extendedEuclid(e,r):
@@ -85,8 +74,18 @@ def extendedEuclid(e,r):
     (d, x, y) = extendedEuclid(r, e % r)
     return y, (x - e // r*y), d
 
-def decrypt():
+def decrypt(privateKey, n, userText):
+    #get the plaintext integer back by using the opposite key used for encryption
+	plain_int = pow(ciphertext, key, n)
+	#change integer into hex value, then strip the first to characters off ie. "0x"
+	p = hex(plain_int)[2:]
+	#change the hex values into ascii integer, then change that integer to character
 
+	try:
+		plaintext = binascii.unhexlify(p).decode('utf-8')
+		return(plaintext)
+	except:
+		print("warning: Your encrypted message is either too long or not a valid encrypted message!")
 
 def generatePrimeNumber(x):
     x = random.randint(10000, 100000) #chooses a prime number between 10000 and 100000
@@ -104,8 +103,6 @@ def checkIfPrime(x, checkX):
             generatePrimeNumber(x)
             counter = 0
         counter += 1
-
-    print("Successful Generation....") #console message to display that there was a successful generation of a prime number
 
 def generateSignature():
 
