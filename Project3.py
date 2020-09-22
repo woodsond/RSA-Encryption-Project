@@ -30,14 +30,42 @@ def menu(n, publicKey, privateKey):
             decryptedUserInput = decrypted(privateKey, n, userInput)
         except:
             print("Warning: Cannot decrypt an empty message")
-            continue 
-
+            #continue 
         if decryptedUserInput is not None:
             print("Decrypted message: ", decryptedUserInput)
-    elif userChoice = "3":
+    elif userChoice == "3":
+        userInput = input("Please enter the message you would like to sign: ")
+        signedMessage = encrypt(n, privateKey, userInput)
+        if signedMessge is not None:
+            print("Signed message: ", signedMessage)
+    elif userChoice == "4":
+        userInput = input("Please enter the message that you would like to verify the signature of: ")
+        try:
+            verifiedMessage = decrypt(publicKey, n, userInput)
+        except:
+            print("Warning: Cannot verify an empty message")
+            #continue
+        if verifiedMessage is not None:
+            print("Verified Message: ", verifiedMessage)
+    elif userChoice == "5":
+        print("Thank you for using this program!")
+        #break
+    else:
+        print("Please enter a number 1-5: ")
+        pass
+def greatestCommonDivisor(a,b):
+    if a < b:
+        a, b = b, a
+    if b == 0:
+        return a
+    else:
+        return greatestCommonDivisor(b, a % b)
 
 def keyGeneration():
-    primeOne, primeTwo, n, r = 0 # initializing the variables that will be used in encrypting. p and q will be the two prime/pseudoprime numbers
+    primeOne = 0
+    primeTwo = 0
+    n = 0
+    r = 0# initializing the variables that will be used in encrypting. p and q will be the two prime/pseudoprime numbers
 
     generatePrimeNumber(primeOne)
     generatePrimeNumber(primeTwo)
@@ -45,18 +73,18 @@ def keyGeneration():
     n = primeOne * primeTwo # here we are getting ready to check for the gcd of n and r. we will use the extended Euclid's algorithm for this to maintain efficiency 
     r = (primeOne - 1) * (primeTwo - 1) #r is going to be used for the gcd(e,r) = 1 where e is the public key and we have already initialized r. if condition is true, we have a public key.
                           #if it is false, we need to try another another public key e for gcd(e,r) so that we can verify if it returns 1.
-    publicKeyE = random.randint(1, r)
+    while True:
+        publicKeyE = random.randint(1, r)
+        if (greatestCommonDivisor(publicKeyE, r) == 1):
+            break
 
-    while gcd(e,r) != 1: #this loop will only enter if it does not equal 1. when it doesn't, then it will generate a new public key e until it does equal 1
-        e = random.randint(1, r)
-
-    privateKey = extendedEuclid(e, r)
+    privateKey = extendedEuclid(publicKeyE, r)
     privateKey = privateKey[1] % r
 
     return (n, publicKeyE, privateKey)
 
 
-def encrypt(x, publicKeyE, userText):
+def encrypt(x, userKey, userText):
 
     #change plaintext into hex string based on ascii value of each character
     hex = binascii.hexlify(userText.encode('utf-8'))
@@ -74,7 +102,7 @@ def extendedEuclid(e,r):
     (d, x, y) = extendedEuclid(r, e % r)
     return y, (x - e // r*y), d
 
-def decrypt(privateKey, n, userText):
+def decrypt(userKey, n, userText):
     #get the plaintext integer back by using the opposite key used for encryption
 	plain_int = pow(ciphertext, key, n)
 	#change integer into hex value, then strip the first to characters off ie. "0x"
@@ -93,29 +121,14 @@ def generatePrimeNumber(x):
 
     checkIfPrime(x, checkX) #pass x and checkX in as the two variables for checkIfPrime()
     
-
-
 def checkIfPrime(x, checkX):
-    counter = 0 #this counter is going to be used to loop for 30 tests of the prime/pseudoprime numbers of p and q and check if they are prime
-    while counter != 30:
-        if (pow(checkX, x-1, x) != 1): #fermat's test algorithm. O(n) time complexity. if it does not equal one, 
-                                       #it will regenerate a new prime number and set counter back to zero to retest for 30 times
-            generatePrimeNumber(x)
-            counter = 0
-        counter += 1
+   tests = 30
+   for i in range(tests):
 
-def generateSignature():
+        primeNum = random.randint(2, x-1)
+        if(pow(primeNum, x-1, x) != 1):
+            return False
 
-
-def checkDS():
-
-
-
+        return True
 #main driver function
-while (rerun):
-    main()
-    userChoice = input("""Would you like to rerun (Y/N): """)
-    if (userChoice == "Y" or userChoice == "y"):
-        rerun = 1
-    else:
-        rerun = 0
+main()
